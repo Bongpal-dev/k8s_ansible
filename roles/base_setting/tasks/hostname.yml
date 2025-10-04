@@ -1,0 +1,14 @@
+---
+- name: Set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Update hosts file
+  blockinfile:
+    path: /etc/hosts
+    block: |
+      {% for host in groups['k8sbase'] %}
+      {{ hostvars[host].ansible_host }} {{ host }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED - Kubernetes Cluster"
+    backup: yes

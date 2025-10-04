@@ -1,0 +1,36 @@
+---
+- name: Install firewalld
+  package:
+    name: firewalld
+    state: present
+
+- name: Start and enable firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Open common ports
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop: "{{ firewall_ports.common }}"
+
+- name: Open k8s default ports
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop: "{{ firewall_ports.k8s_default }}"
+
+- name: Open control plane ports
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop: "{{ firewall_ports.k8s_control_plane_extra }}"
+  when: "'controlplane' in group_names"

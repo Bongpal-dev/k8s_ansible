@@ -1,0 +1,28 @@
+---
+firewall_ports:
+  common:
+    - 22/tcp
+  k8s_default:
+    - 10250/tcp
+    - 30000-32767/tcp
+    - 179/tcp
+  k8s_control_plane_extra:
+    - 6443/tcp
+    - 2379-2380/tcp
+    - 10259/tcp
+    - 10257/tcp
+
+ntp_servers:
+  - 0.kr.pool.ntp.org
+  - 1.kr.pool.ntp.org
+  - 2.kr.pool.ntp.org
+
+kernel_modules:
+  - overlay
+  - br_netfilter
+
+sysctl_config:
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.ipv4.ip_forward: 1
+  vm.swappiness: 0

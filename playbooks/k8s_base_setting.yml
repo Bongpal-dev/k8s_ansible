@@ -1,0 +1,6 @@
+---
+- name: Kubernetes Base Setting
+  hosts: k8sbase
+  become: yes
+  roles:
+    - base_setting

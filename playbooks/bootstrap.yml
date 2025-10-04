@@ -1,0 +1,75 @@
+---
+- name: Prepare SSH Key
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: Get Current Node User Home Path
+      ansible.builtin.set_fact:
+        current_path: "{{ lookup('env', 'HOME') }}/.ssh/{{ ansible_node_user }}_id_rsa"
+
+    - name: Check SSH key already exists
+      stat:
+        path: "{{ current_path }}"
+      register: key_state
+    
+    - name: Generate SSH key
+      ansible.builtin.command: ssh-keygen -t rsa -b 4096 -f "{{ current_path }}" -N ""
+      when: not key_state.stat.exists
+
+
+- name: Create user & Deploy SSH Key
+  hosts: new_servers
+  remote_user: root
+  gather_facts: false
+
+  tasks:
+    - name: Create Ansible User
+      ansible.builtin.user:
+        name: "{{ ansible_node_user }}"
+        password: "{{ user_password }}"
+        groups: wheel
+        append: yes
+        state: present
+
+    - name: Deploy SSH key
+      ansible.builtin.authorized_key:
+        user: "{{ ansible_node_user }}"
+        state: present
+        key: "{{ lookup('file', hostvars['localhost']['current_path'] + '.pub') }}"
+
+    - name: Configure no password sudo
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+
+    - name: Find root login permission file
+      ansible.builtin.find:
+        paths: /etc/ssh/sshd_config.d/
+        patterns: "*permitrootlogin*"
+      register: root_login_file
+
+    - name: Remove root login premission file
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ root_login_file.files }}"
+      when: root_login_file.matched > 0
+
+    - name: Disable root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify: Restart sshd
+
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted

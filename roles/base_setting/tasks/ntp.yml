@@ -1,0 +1,32 @@
+---
+- name: Install chronyd
+  package:
+    name: chrony
+    state: present
+
+- name: Configure NTP servers
+  lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^server '
+    state: absent
+
+- name: Add NTP servers
+  lineinfile:
+    path: /etc/chrony.conf
+    line: "server {{ item }} iburst"
+  loop: "{{ ntp_servers }}"
+
+- name: Start and enable chronyd
+  systemd:
+    name: chronyd
+    state: started
+    enabled: yes
+
+- name: Force time synchronization
+  command: chronyc makestep
+  changed_when: false
+
+- name: Verify time synchronization
+  command: chronyc tracking
+  register: chrony_status
+  changed_when: false

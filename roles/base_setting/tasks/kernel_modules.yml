@@ -1,0 +1,22 @@
+---
+- name: Load kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kernel_modules }}"
+
+- name: Enable kernel modules
+  copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      {% for module in kernel_modules %}
+      {{ module }}
+      {% endfor %}
+    mode: '0644'
+
+- name: Verify kernel modules
+  shell: lsmod | grep "{{ item }}"
+  loop: "{{ kernel_modules }}"
+  register: verify_result
+  changed_when: false
+  failed_when: verify_result.rc != 0
