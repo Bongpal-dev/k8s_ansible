@@ -1,15 +1,1 @@
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
-# k8s_ansible
+# 쿠버네티스 세팅용 Ansible 파일
